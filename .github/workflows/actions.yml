@@ -28,6 +28,7 @@ jobs:
     - name: Run Tests with Pytests
       run: |
         pip install pytest pytest-django pytest-cov 
+        export DJANGO_SETTINGS_MODULE=commerce.settings
         pytest api/tests/tests.py --cov=api  --cov-report=html
 
     - name: Upload coverage report
