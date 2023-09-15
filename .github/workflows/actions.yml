@@ -67,7 +67,7 @@ jobs:
       run: |
         echo "AFRICASTALKING_API_KEY=${{secrets.AFRICASTALKING_API_KEY}}" >> $GITHUB_ENV
         echo "AFRICASTALKING_USERNAME=${{secrets.AFRICASTALKING_USERNAME}}" >> $GITHUB_ENV
-        echo "AFRICASTALKING_SENDER_ID=${{secrets.AFRICASTALKING_SENDER_ID}} >> $GITHUB_ENV
+        echo "AFRICASTALKING_SENDER_ID=${{secrets.AFRICASTALKING_SENDER_ID}}" >> $GITHUB_ENV
         pip install pytest pytest-django pytest-cov 
         export DJANGO_SETTINGS_MODULE=commerce.settings
         python manage.py makemigrations
