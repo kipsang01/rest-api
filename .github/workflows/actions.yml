@@ -63,6 +63,8 @@ jobs:
       run: |
         pip install pytest pytest-django pytest-cov 
         export DJANGO_SETTINGS_MODULE=commerce.settings
+        python manage.py makemigrations
+        python manage.py migrate
         pytest api/tests/tests.py --cov=api  --cov-report=html
 
 
