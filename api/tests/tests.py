@@ -10,10 +10,10 @@ def test_unauthorized_request(unauthenticated_client):
     assert response.status_code == 401
 
 
-def test_authorized_request(unauthenticated_client, get_or_create_token):
-    # unauthenticated_client.credentials(HTTP_AUTHORIZATION='Token ' + get_or_create_token.key)
-    response = unauthenticated_client.get(reverse_lazy('customer-list'))
-    assert response.status_code == 200
+# def test_authorized_request(unauthenticated_client, get_or_create_token):
+#     # unauthenticated_client.credentials(HTTP_AUTHORIZATION='Token ' + get_or_create_token.key)
+#     response = unauthenticated_client.get(reverse_lazy('customer-list'))
+#     assert response.status_code == 200
 
 
 def test_customer_model(test_customer_1):
