@@ -19,3 +19,4 @@ typing_extensions==4.7.1
 urllib3==2.0.4
 wrapt==1.15.0
 python-dotenv==1.0.0
+africastalking==1.2.5
