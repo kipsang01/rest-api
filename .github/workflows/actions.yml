@@ -81,6 +81,10 @@ jobs:
     name: Set Up Infrastructure
     runs-on: ubuntu-latest
     if: ${{github.event_name == 'push'}}
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./infrastructure
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -101,6 +105,8 @@ jobs:
         id: fmt
         run: terraform fmt -check
         continue-on-error: true
+        with:
+          tf_actions_working_dir: 'infrastructure'
 
       - name: Terraform Init
         id: init
@@ -108,7 +114,8 @@ jobs:
           AWS_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
           AWS_BUCKET_KEY_NAME: ${{ secrets.AWS_S3_BUCKET_KEY_NAME }}
         run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
-
+        with:
+          tf_actions_working_dir: 'infrastructure'
 
       - name: Terraform Validate
         id: validate
