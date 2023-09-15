@@ -11,7 +11,7 @@ resource "aws_ecs_service" "service" {
   enable_execute_command = true
 
   deployment_maximum_percent = 200
-  deployment_minimum_healthy_percent = 100
+  deployment_minimum_healthy_percent = 0
   desired_count = 1
   task_definition = aws_ecs_task_definition.app_task.arn
 
