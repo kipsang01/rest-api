@@ -77,7 +77,7 @@ resource "aws_ecs_task_definition" "app_task" {
       ]
       portMappings : [
         {
-          "containerPort": 8000,
+          "containerPort": 80,
           "hostPort": 80
         }
       ],
