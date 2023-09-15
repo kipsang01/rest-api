@@ -59,6 +59,9 @@ jobs:
         DATABASE_PASSWORD: postgres
         DATABASE_HOST: localhost
         DATABASE_PORT: 5432
+        AFRICASTALKING_API_KEY: ${{ secrets.AFRICASTALKING_API_KEY }},
+        AFRICASTALKING_USERNAME: ${{ secrets.AFRICASTALKING_USERNAME }},
+        AFRICASTALKING_SENDER_ID: ${{ secrets.AFRICASTALKING_SENDER_ID }}
 
       run: |
         pip install pytest pytest-django pytest-cov 
