@@ -10,7 +10,7 @@ permissions:
       contents: read # This is required for actions/checkout
       pull-requests: write # This is required for gh bot to comment PR
 env:
-  AWS_REGION: ${{ env.AWS_REGION }}
+  AWS_REGION: ${{ var.AWS_REGION }}
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -157,16 +157,16 @@ jobs:
         run: terraform apply -auto-approve -input=false
         env:
           DJANGO_SECRET_KEY:  ${{ secrets.DJANGO_SECRET_KEY }}
-          DEBUG:  ${{ var.DJANGO_SECRET_KEY }}
-          AFRICASTALKING_API_KEY:  ${{ secrets.DJANGO_SECRET_KEY }}
-          AFRICASTALKING_USERNAME:  ${{ secrets.DJANGO_SECRET_KEY }}
-          AFRICASTALKING_SENDER:  ${{ secrets.DJANGO_SECRET_KEY }}
+          DEBUG:  ${{ var.DEBUG_MODE }}
+          AFRICASTALKING_API_KEY:  ${{ secrets.AFRICASTALKING_API_KEY }}
+          AFRICASTALKING_USERNAME:  ${{ secrets.AFRICASTALKING_USERNAME }}
+          AFRICASTALKING_SENDER:  ${{ secrets.AFRICASTALKING_SENDER }}
 
       - name: Sync S3
         uses: jakejarvis/s3-sync-action@master
         env:
           SOURCE_DIR: './infrastructure'
-          AWS_REGION: ${{ secrets. AWS_REGION }}
+          AWS_REGION: ${{ var. AWS_REGION }}
           AWS_S3_BUCKET: ${{ secrets. AWS_S3_BUCKET_NAME }}
 
   build-and-push:
@@ -187,7 +187,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           role-session-name: RoleSession
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ var.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -222,6 +222,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ENVIRONMENT }}-app-service
-          cluster: ${{ env.ENVIRONMENT }}-app-cluster
+          service: ${{ var.ENVIRONMENT }}-app-service
+          cluster: ${{ var.ENVIRONMENT }}-app-cluster
           wait-for-service-stability: true
