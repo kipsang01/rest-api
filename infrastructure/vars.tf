@@ -11,16 +11,6 @@ variable "region" {
   default = "us-east-1"
   description = "AWS Region"
 }
-variable "AWS_REPO_URL" {
-  type = string
-  default = ""
-}
-variable "TFC_AWS_RUN_ROLE_ARN"{
-
-}
-variable "TFC_AWS_PROVIDER_AUTH" {
-
-}
 
 variable "vpc_cidr" {
   default     = "10.0.0.0/16"
@@ -39,22 +29,6 @@ variable "private_subnets_cidr" {
   description = "CIDR block for Private Subnet"
 }
 
-variable "prod_rds_db_name" {
-  description = "RDS database name"
-  default     = "orders"
-}
-variable "prod_rds_username" {
-  description = "RDS database username"
-  default     = "Admin"
-}
-variable "prod_rds_password" {
-  description = "postgres password for production DB"
-}
-variable "prod_rds_instance_class" {
-  description = "RDS instance type"
-  default     = "db.t4g.micro"
-}
-
 variable "DATABASE_NAME" {
   description = "RDS database name"
   default = ""
@@ -67,14 +41,11 @@ variable "DATABASE_PASSWORD" {
   description = "RDS database password"
   default = ""
 }
-variable "DATABASE_URL" {
-  default = ""
-}
 variable "DATABASE_PORT" {
   default = "5342"
 }
 variable "DATABASE_HOST" {
-  default = ""
+  default = "localhost"
 }
 variable "AFRICASTALKING_API_KEY" {
   default = ""

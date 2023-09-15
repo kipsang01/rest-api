@@ -171,9 +171,12 @@ jobs:
         env:
           DJANGO_SECRET_KEY:  ${{ secrets.DJANGO_SECRET_KEY }}
           DEBUG:  ${{ vars.DEBUG_MODE }}
+          DATABASE_NAME: ${{secrets.POSTGRES_DB}}
+          DATABASE_USER: ${{secrets.POSTGRES_USER}}
+          DATABASE_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
           AFRICASTALKING_API_KEY:  ${{ secrets.AFRICASTALKING_API_KEY }}
           AFRICASTALKING_USERNAME:  ${{ secrets.AFRICASTALKING_USERNAME }}
-          AFRICASTALKING_SENDER:  ${{ secrets.AFRICASTALKING_SENDER }}
+          AFRICASTALKING_SENDER:  ${{ secrets.AFRICASTALKING_SENDER_ID }}
 
       - name: Sync S3
         uses: jakejarvis/s3-sync-action@master
