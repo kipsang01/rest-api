@@ -1,30 +1,236 @@
-name: App CI
+name: App CICD
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
+permissions:
+      id-token: write # This is required for aws oidc connection
+      contents: read # This is required for actions/checkout
+      pull-requests: write # This is required for gh bot to comment PR
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
 jobs:
-  build:
-
+  test:
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      POSTGRES_PORT: 5432
+      AFRICASTALKING_API_KEY: ${{secrets.AFRICASTALKING_API_KEY}}
+      AFRICASTALKING_USERNAME: ${{ secrets.AFRICASTALKING_USERNAME }},
+      AFRICASTALKING_SENDER_ID: ${{ secrets.AFRICASTALKING_SENDER_ID }}
+
+    services:
+      database:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: orders
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.7, 3.8, 3.9, 3.10, 3.11]
+        python-version: ["3.10"]
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.10
       uses: actions/setup-python@v3
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: "3.10"
+
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    - name: Run Tests
+
+    - name: Run Tests with Pytests
+      env:
+        DATABASE_NAME: orders
+        DATABASE_USER: postgres
+        DATABASE_PASSWORD: postgres
+        DATABASE_HOST: localhost
+        DATABASE_PORT: 5432
+
+
       run: |
-        pytest manage.py test
+        echo "AFRICASTALKING_API_KEY=${{secrets.AFRICASTALKING_API_KEY}}" >> $GITHUB_ENV
+        echo "AFRICASTALKING_USERNAME=${{secrets.AFRICASTALKING_USERNAME}}" >> $GITHUB_ENV
+        echo "AFRICASTALKING_SENDER_ID=${{secrets.AFRICASTALKING_SENDER_ID}}" >> $GITHUB_ENV
+        pip install pytest pytest-django pytest-cov 
+        export DJANGO_SETTINGS_MODULE=commerce.settings
+        python manage.py makemigrations
+        python manage.py migrate
+        pytest api/tests/tests.py --cov=api  --cov-report=html
+
+
+
+
+  setup-infrastructure:
+    name: Set Up Infrastructure
+    runs-on: ubuntu-latest
+    if: ${{github.event_name == 'push'}}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.3.0
+
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        env:
+          AWS_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
+          AWS_BUCKET_KEY_NAME: ${{ secrets.AWS_S3_BUCKET_KEY_NAME }}
+        run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
+
+
+      - name: Terraform Validate
+        id: validate
+        uses: hashicorp/terraform-github-actions/validate@v0.3.7
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+
+      - uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            <details><summary>Validation Output</summary>
+        
+            \`\`\`\n
+            ${{ steps.validate.outputs.stdout }}
+            \`\`\`
+            
+            </details>
+            
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+            
+            <details><summary>Show Plan</summary>
+            
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+            
+            </details>
+            
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve -input=false
+        env:
+          DJANGO_SECRET_KEY:  ${{ secrets.DJANGO_SECRET_KEY }}
+          DEBUG:  ${{ vars.DEBUG_MODE }}
+          AFRICASTALKING_API_KEY:  ${{ secrets.AFRICASTALKING_API_KEY }}
+          AFRICASTALKING_USERNAME:  ${{ secrets.AFRICASTALKING_USERNAME }}
+          AFRICASTALKING_SENDER:  ${{ secrets.AFRICASTALKING_SENDER }}
+
+      - name: Sync S3
+        uses: jakejarvis/s3-sync-action@master
+        env:
+          SOURCE_DIR: './infrastructure'
+          AWS_REGION: ${{ vars. AWS_REGION }}
+          AWS_S3_BUCKET: ${{ secrets. AWS_S3_BUCKET_NAME }}
+
+  build-and-push:
+    name: Deploy
+    needs: setup-infrastructure
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    if: ${{github.event_name == 'push'}}
+    environment: development
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-session-name: RoleSession
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Creating New Tag of Releases
+        id: increment-git-tag
+        working-directory: ./scripts
+        run: |
+          bash get-tag.sh -v major
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: django-app-backend
+          IMAGE_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: .github/workflows/task_definition.json
+          container-name: restapi
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ vars.ENVIRONMENT }}-app-service
+          cluster: ${{ vars.ENVIRONMENT }}-app-cluster
+          wait-for-service-stability: true
