@@ -10,7 +10,7 @@ permissions:
       contents: read # This is required for actions/checkout
       pull-requests: write # This is required for gh bot to comment PR
 env:
-  AWS_REGION: ${{ var.AWS_REGION }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -25,9 +25,9 @@ jobs:
       database:
         image: postgres:15
         env:
-          POSTGRES_USER: ${{ var.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ var.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ var.POSTGRES_DB }}
+          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ vars.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
         ports:
           - 5432:5432
         options: >-
@@ -54,11 +54,11 @@ jobs:
 
     - name: Run Tests with Pytests
       env:
-        DATABASE_NAME: ${{ var.POSTGRES_DB }}
-        DATABASE_USER: ${{ var.POSTGRES_USER }}
-        DATABASE_PASSWORD: ${{ var.POSTGRES_PASSWORD }}
-        DATABASE_HOST: ${{ var.POSTGRES_HOST }}
-        DATABASE_PORT: ${{ var.POSTGRES_PORT }}
+        DATABASE_NAME: ${{ vars.POSTGRES_DB }}
+        DATABASE_USER: ${{ vars.POSTGRES_USER }}
+        DATABASE_PASSWORD: ${{ vars.POSTGRES_PASSWORD }}
+        DATABASE_HOST: ${{ vars.POSTGRES_HOST }}
+        DATABASE_PORT: ${{ vars.POSTGRES_PORT }}
 
       run: |
         pip install pytest pytest-django pytest-cov 
@@ -157,7 +157,7 @@ jobs:
         run: terraform apply -auto-approve -input=false
         env:
           DJANGO_SECRET_KEY:  ${{ secrets.DJANGO_SECRET_KEY }}
-          DEBUG:  ${{ var.DEBUG_MODE }}
+          DEBUG:  ${{ vars.DEBUG_MODE }}
           AFRICASTALKING_API_KEY:  ${{ secrets.AFRICASTALKING_API_KEY }}
           AFRICASTALKING_USERNAME:  ${{ secrets.AFRICASTALKING_USERNAME }}
           AFRICASTALKING_SENDER:  ${{ secrets.AFRICASTALKING_SENDER }}
@@ -166,7 +166,7 @@ jobs:
         uses: jakejarvis/s3-sync-action@master
         env:
           SOURCE_DIR: './infrastructure'
-          AWS_REGION: ${{ var. AWS_REGION }}
+          AWS_REGION: ${{ vars. AWS_REGION }}
           AWS_S3_BUCKET: ${{ secrets. AWS_S3_BUCKET_NAME }}
 
   build-and-push:
@@ -187,7 +187,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           role-session-name: RoleSession
-          aws-region: ${{ var.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -222,6 +222,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ var.ENVIRONMENT }}-app-service
-          cluster: ${{ var.ENVIRONMENT }}-app-cluster
+          service: ${{ vars.ENVIRONMENT }}-app-service
+          cluster: ${{ vars.ENVIRONMENT }}-app-cluster
           wait-for-service-stability: true
