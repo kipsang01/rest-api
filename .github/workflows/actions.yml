@@ -16,18 +16,18 @@ jobs:
     runs-on: ubuntu-latest
     env:
       POSTGRES_HOST: localhost
-      POSTGRES_USER: 'Admin'
-      POSTGRES_PASSWORD: 'Admin'
-      POSTGRES_DB: 'orders'
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
       POSTGRES_PORT: 5432
 
     services:
       database:
         image: postgres:15
         env:
-          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ vars.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         ports:
           - 5432:5432
         options: >-
@@ -54,11 +54,11 @@ jobs:
 
     - name: Run Tests with Pytests
       env:
-        DATABASE_NAME: ${{ vars.POSTGRES_DB }}
-        DATABASE_USER: ${{ vars.POSTGRES_USER }}
-        DATABASE_PASSWORD: ${{ vars.POSTGRES_PASSWORD }}
-        DATABASE_HOST: ${{ vars.POSTGRES_HOST }}
-        DATABASE_PORT: ${{ vars.POSTGRES_PORT }}
+        DATABASE_NAME: ${{ secrets.POSTGRES_DB }}
+        DATABASE_USER: ${{ secrets.POSTGRES_USER }}
+        DATABASE_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        DATABASE_HOST: ${{ secrets.POSTGRES_HOST }}
+        DATABASE_PORT: ${{ secrets.POSTGRES_PORT }}
 
       run: |
         pip install pytest pytest-django pytest-cov 
@@ -80,7 +80,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
 
       - name: Setup Terraform
@@ -96,8 +96,8 @@ jobs:
       - name: Terraform Init
         id: init
         env:
-          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
-          AWS_BUCKET_KEY_NAME: ${{ secrets.AWS_BUCKET_KEY_NAME }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
+          AWS_BUCKET_KEY_NAME: ${{ secrets.AWS_S3_BUCKET_KEY_NAME }}
         run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
 
 
