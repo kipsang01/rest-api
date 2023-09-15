@@ -66,7 +66,7 @@ def test_customer_2(db):
     customer, _ = Customer.objects.get_or_create(
         name="John Doe",
         code="200",
-        phone_number="+254720000000",
+        phone_number="+254722222222",
     )
     return customer
 
