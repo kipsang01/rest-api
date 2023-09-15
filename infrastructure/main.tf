@@ -10,7 +10,7 @@ terraform {
   backend "s3" {
     bucket = "deployment-state-files"
     key    = "terraform.tfstate"
-    region = var.region
+    region = "us-east-1"
     encrypt=true
   }
 }
