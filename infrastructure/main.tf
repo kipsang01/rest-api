@@ -6,6 +6,16 @@ locals {
   availability_zones = ["${var.region}a", "${var.region}b"]
 }
 
+terraform {
+  backend "s3" {
+    bucket = "deployment-state-files"
+    key    = "terraform.tfstate"
+    region = var.region
+    encrypt=true
+  }
+}
+
+
 resource "aws_vpc" "main-vpc" {
   cidr_block       = var.vpc_cidr
   instance_tenancy = "default"

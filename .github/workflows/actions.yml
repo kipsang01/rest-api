@@ -109,10 +109,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        env:
-          AWS_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
-          AWS_BUCKET_KEY_NAME: ${{ secrets.AWS_S3_BUCKET_KEY_NAME }}
-        run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
+        run: terraform init
 
       - name: Terraform Validate
         id: validate
@@ -177,13 +174,6 @@ jobs:
           AFRICASTALKING_API_KEY:  ${{ secrets.AFRICASTALKING_API_KEY }}
           AFRICASTALKING_USERNAME:  ${{ secrets.AFRICASTALKING_USERNAME }}
           AFRICASTALKING_SENDER:  ${{ secrets.AFRICASTALKING_SENDER_ID }}
-
-      - name: Sync S3
-        uses: jakejarvis/s3-sync-action@master
-        env:
-          SOURCE_DIR: './infrastructure'
-          AWS_REGION: ${{ vars. AWS_REGION }}
-          AWS_S3_BUCKET: ${{ secrets. AWS_S3_BUCKET_NAME }}
 
   build-and-push:
     name: Deploy
