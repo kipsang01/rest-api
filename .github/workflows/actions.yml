@@ -25,9 +25,9 @@ jobs:
       database:
         image: postgres:15
         env:
-          POSTGRES_USER: ${{ env.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ var.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ var.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ var.POSTGRES_DB }}
         ports:
           - 5432:5432
         options: >-
@@ -54,11 +54,11 @@ jobs:
 
     - name: Run Tests with Pytests
       env:
-        DATABASE_NAME: ${{ env.POSTGRES_DB }}
-        DATABASE_USER: ${{ env.POSTGRES_USER }}
-        DATABASE_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-        DATABASE_HOST: ${{ env.POSTGRES_HOST }}
-        DATABASE_PORT: ${{ env.POSTGRES_PORT }}
+        DATABASE_NAME: ${{ var.POSTGRES_DB }}
+        DATABASE_USER: ${{ var.POSTGRES_USER }}
+        DATABASE_PASSWORD: ${{ var.POSTGRES_PASSWORD }}
+        DATABASE_HOST: ${{ var.POSTGRES_HOST }}
+        DATABASE_PORT: ${{ var.POSTGRES_PORT }}
 
       run: |
         pip install pytest pytest-django pytest-cov 
