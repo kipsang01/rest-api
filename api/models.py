@@ -32,9 +32,9 @@ class Order(models.Model):
         order_summary = f"Item: {self.item} - Amount:{self.amount}"
         message = (f"Hello {self.customer.name}, Your Order {order_summary}"
                    f" has been received please be patient while it's being processed")
-        sender = os.getenv("AFRICASTALKING_SENDER_ID")
+
         recipients = [self.customer.phone_number]
-        response = self.send_message(message, sender, recipients)
+        response = self.send_message(message, recipients)
         if response['Recipients'][0]['statusCode'] == 101:
             self.message_sent = True
             return 'success'
@@ -42,7 +42,8 @@ class Order(models.Model):
             return None
 
     @staticmethod
-    def send_message(message, sender, recipients):
+    def send_message(message, recipients):
+        sender = os.getenv("AFRICASTALKING_SENDER_ID")
         api_key = os.getenv('AFRICASTALKING_API_KEY')
         username = os.getenv('AFRICASTALKING_USERNAME')
 
@@ -51,9 +52,6 @@ class Order(models.Model):
 
         try:
             response = sms.send(message, recipients, sender)
-            # {'SMSMessageData': {'Message': 'Sent to 1/1 Total Cost: KES 0.8000 Message parts: 1', 'Recipients': [
-            # {'cost': 'KES 0.8000', 'messageId': 'ATXid_4b9777d774f41c40bb5fef825e19944c', 'number': '+254725171930',
-            #  'status': 'Success', 'statusCode': 101}]}}
             return response['SMSMessageData']
         except Exception as e:
             return None
