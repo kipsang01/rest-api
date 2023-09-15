@@ -81,6 +81,10 @@ jobs:
     name: Set Up Infrastructure
     runs-on: ubuntu-latest
     if: ${{github.event_name == 'push'}}
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./infrastructure
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -91,6 +95,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           aws-region: ${{ vars.AWS_REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
+
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -108,7 +113,6 @@ jobs:
           AWS_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
           AWS_BUCKET_KEY_NAME: ${{ secrets.AWS_S3_BUCKET_KEY_NAME }}
         run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
-
 
       - name: Terraform Validate
         id: validate
