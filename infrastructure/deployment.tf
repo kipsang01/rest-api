@@ -83,6 +83,14 @@ resource "aws_ecs_task_definition" "app_task" {
       ],
       memory : 512,
       cpu : 256
+      logConfiguration: {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/my-log-group",
+          "awslogs-region": var.region,
+          "awslogs-stream-prefix": "django-logs"
+        }
+      }
     }
   ])
 

@@ -46,7 +46,7 @@ variable "DATABASE_PASSWORD" {
   default = ""
 }
 variable "DATABASE_PORT" {
-  default = "5342"
+  default = "5432"
 }
 variable "DATABASE_HOST" {
   default = "localhost"
