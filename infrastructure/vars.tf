@@ -29,6 +29,10 @@ variable "private_subnets_cidr" {
   description = "CIDR block for Private Subnet"
 }
 
+variable "DATABASE_INSTANCE_CLASS" {
+  default = "db.t3.micro"
+}
+
 variable "DATABASE_NAME" {
   description = "RDS database name"
   default = ""
