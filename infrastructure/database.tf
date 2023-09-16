@@ -1,6 +1,7 @@
 resource "aws_db_subnet_group" "prod" {
   name       = "prod"
-  subnet_ids = [aws_subnet.private_subnet.id]
+  for_each = toset(aws_subnet.private_subnet.id)
+  subnet_ids = each.value
 }
 
 resource "aws_db_instance" "prod" {
