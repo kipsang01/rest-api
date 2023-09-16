@@ -56,7 +56,8 @@ resource "aws_ecs_task_definition" "app_task" {
         },
         {
           "name": "DATABASE_HOST",
-          "value": aws_db_instance.prod.address
+          "value": ""
+#          "value": aws_db_instance.prod.address
         },
         {
           "name": "DATABASE_PORT",
