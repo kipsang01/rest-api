@@ -175,63 +175,63 @@ jobs:
           TF_VAR_AFRICASTALKING_USERNAME:  ${{ secrets.AFRICASTALKING_USERNAME }}
           TF_VAR_AFRICASTALKING_SENDER:  ${{ secrets.AFRICASTALKING_SENDER_ID }}
 
-  build-and-push:
-    name: Deploy
-    needs: setup-infrastructure
-    permissions:
-      id-token: write
-      contents: read
-    runs-on: ubuntu-latest
-    if: ${{github.event_name == 'push'}}
-    environment: development
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE }}
-          role-session-name: RoleSession
-          aws-region: ${{ vars.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Creating New Tag of Releases
-        id: increment-git-tag
-        working-directory: ./scripts
-        run: |
-          bash get-tag.sh -v major
-
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: django-app-backend
-          IMAGE_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
-        run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-      - name: Download task definition
-        run: |
-          aws ecs describe-task-definition --task-definition rest-api --query taskDefinition > task_definition.json
-
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task_definition.json
-          container-name: restapi
-          image: ${{ steps.build-image.outputs.image }}
-
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ vars.ENVIRONMENT }}-app-service
-          cluster: ${{ vars.ENVIRONMENT }}-app-cluster
-          wait-for-service-stability: true
+#  build-and-push:
+#    name: Deploy
+#    needs: setup-infrastructure
+#    permissions:
+#      id-token: write
+#      contents: read
+#    runs-on: ubuntu-latest
+#    if: ${{github.event_name == 'push'}}
+#    environment: development
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v3
+#
+#      - name: Configure AWS credentials
+#        uses: aws-actions/configure-aws-credentials@v2
+#        with:
+#          role-to-assume: ${{ secrets.AWS_ROLE }}
+#          role-session-name: RoleSession
+#          aws-region: ${{ vars.AWS_REGION }}
+#
+#      - name: Login to Amazon ECR
+#        id: login-ecr
+#        uses: aws-actions/amazon-ecr-login@v1
+#
+#      - name: Creating New Tag of Releases
+#        id: increment-git-tag
+#        working-directory: ./scripts
+#        run: |
+#          bash get-tag.sh -v major
+#
+#      - name: Build, tag, and push image to Amazon ECR
+#        id: build-image
+#        env:
+#          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#          ECR_REPOSITORY: django-app-backend
+#          IMAGE_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
+#        run: |
+#          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+#          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+#          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+#
+#      - name: Download task definition
+#        run: |
+#          aws ecs describe-task-definition --task-definition rest-api --query taskDefinition > task_definition.json
+#
+#      - name: Fill in the new image ID in the Amazon ECS task definition
+#        id: task-def
+#        uses: aws-actions/amazon-ecs-render-task-definition@v1
+#        with:
+#          task-definition: task_definition.json
+#          container-name: restapi
+#          image: ${{ steps.build-image.outputs.image }}
+#
+#      - name: Deploy Amazon ECS task definition
+#        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+#        with:
+#          task-definition: ${{ steps.task-def.outputs.task-definition }}
+#          service: ${{ vars.ENVIRONMENT }}-app-service
+#          cluster: ${{ vars.ENVIRONMENT }}-app-cluster
+#          wait-for-service-stability: true
