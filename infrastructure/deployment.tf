@@ -23,7 +23,8 @@ resource "aws_ecs_service" "service" {
 }
 
 resource "aws_ecs_task_definition" "app_task" {
-  depends_on = [aws_ecr_repository.backend, aws_db_instance.prod]
+#  depends_on = [aws_ecr_repository.backend, aws_db_instance.prod]
+  depends_on = [aws_ecr_repository.backend]
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   memory                   = 512
