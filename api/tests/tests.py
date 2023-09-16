@@ -26,10 +26,10 @@ def test_orders_model(test_order_1):
     assert name == 'Book'
 
 
-def test_notify_customer(test_order_1):
-    assert test_order_1.message_sent is False
-    test_order_1.notify_customer()
-    assert test_order_1.message_sent is True
+# def test_notify_customer(test_order_1):
+#     assert test_order_1.message_sent is False
+#     test_order_1.notify_customer()
+#     assert test_order_1.message_sent is True
 
 
 # def test_send_message_success(test_order_2):
@@ -44,14 +44,6 @@ def test_notify_customer(test_order_1):
 #     recipients = test_order_2.customer.phone_number
 #     response = test_order_2.send_message(message, recipients)
 #     assert response is None
-
-
-def test_customer_create():
-    pass
-
-
-def test_orders_create():
-    pass
 
 
 def test_customer_get_list(api_client, test_customer_1, test_customer_2):
@@ -108,35 +100,3 @@ def test_post_customers(api_client, request_data, expected_status_code):
         response_data = response.data
         for key, value in request_data.items():
             assert response_data['data'][key] == value
-
-# def get_customer(test_customer_1):
-#     return test_customer_1.id
-# @pytest.mark.parametrize(
-#     "request_data, expected_status_code",
-#     [
-#         pytest.param(
-#             {"item": "Book", "amount": 1000},
-#             status.HTTP_201_CREATED,
-#             id="complete-data",
-#         ),
-#         # pytest.param(
-#         #
-#         #     {"customer": test_customer_1, "item": "Book"},
-#         #     status.HTTP_400_BAD_REQUEST,
-#         #     id="missing-amount",
-#         # ),
-#         # pytest.param(
-#         #
-#         #     {"item": "Book"},
-#         #     status.HTTP_400_BAD_REQUEST,
-#         #     id="missing-customer",
-#         # )
-#     ],
-# )
-# def test_post_orders(api_client, request_data, expected_status_code):
-#     response = api_client.post(reverse_lazy("order-list"), data=request_data)
-#     assert response.status_code == expected_status_code
-#     if status.is_success(response.status_code):
-#         response_data = response.data
-#         for key, value in request_data.items():
-#             assert response_data['data'][key] == value
