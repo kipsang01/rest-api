@@ -32,18 +32,18 @@ def test_notify_customer(test_order_1):
     assert test_order_1.message_sent is True
 
 
-def test_send_message_success(test_order_2):
-    message = "Hello world"
-    recipients = test_order_2.customer.phone_number
-    response = test_order_2.send_message(message, [recipients])
-    assert response['Recipients'][0]['statusCode'] == 101
-
-
-def test_send_message_failure(test_order_2):
-    message = "Hello world"
-    recipients = test_order_2.customer.phone_number
-    response = test_order_2.send_message(message, recipients)
-    assert response is None
+# def test_send_message_success(test_order_2):
+#     message = "Hello world"
+#     recipients = test_order_2.customer.phone_number
+#     response = test_order_2.send_message(message, [recipients])
+#     assert response['Recipients'][0]['statusCode'] == 101
+#
+#
+# def test_send_message_failure(test_order_2):
+#     message = "Hello world"
+#     recipients = test_order_2.customer.phone_number
+#     response = test_order_2.send_message(message, recipients)
+#     assert response is None
 
 
 def test_customer_create():

@@ -11,7 +11,7 @@ resource "aws_ecs_service" "service" {
   enable_execute_command = true
 
   deployment_maximum_percent = 200
-  deployment_minimum_healthy_percent = 0
+  deployment_minimum_healthy_percent = 100
   desired_count = 1
   task_definition = aws_ecs_task_definition.app_task.arn
 
@@ -86,12 +86,6 @@ resource "aws_ecs_task_definition" "app_task" {
     }
   ])
 
-  provisioner "local-exec" {
-    command = <<-EOF
-      task_definition_arn=$(aws ecs describe-task-definition --task-definition ${aws_ecs_task_definition.app_task.family}:${aws_ecs_task_definition.app_task.revision} --query 'taskDefinition.taskDefinitionArn' --output text)
-      aws ecs describe-task-definition --task-definition $task_definition_arn > task_definition.json
-    EOF
-  }
 }
 
 resource "aws_iam_role" "ecsTaskExecutionRole" {
