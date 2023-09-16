@@ -1,6 +1,5 @@
 
 resource "aws_db_instance" "prod" {
-  identifier              = "prod"
   db_name                 = var.DATABASE_NAME
   username                = var.DATABASE_USER
   password                = var.DATABASE_PASSWORD
