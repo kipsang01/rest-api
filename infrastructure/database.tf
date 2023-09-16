@@ -1,8 +1,3 @@
-resource "aws_db_subnet_group" "prod" {
-  name       = "prod"
-  for_each = toset(aws_subnet.private_subnet.id)
-  subnet_ids = each.value
-}
 
 resource "aws_db_instance" "prod" {
   identifier              = "prod"
@@ -16,7 +11,6 @@ resource "aws_db_instance" "prod" {
   allocated_storage       = "20"
   storage_encrypted       = false
   vpc_security_group_ids  = [aws_security_group.rds_prod.name]
-  db_subnet_group_name    = aws_db_subnet_group.prod.name
   multi_az                = false
   storage_type            = "gp2"
   publicly_accessible     = false
