@@ -19,7 +19,6 @@ resource "aws_db_instance" "prod" {
 
 resource "aws_security_group" "rds_prod" {
   name        = "django-postgres-SG"
-  vpc_id      = aws_vpc.main-vpc.id
 
   ingress {
     protocol        = "tcp"
