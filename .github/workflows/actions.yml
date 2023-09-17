@@ -254,6 +254,11 @@ jobs:
           cluster: ${{ vars.ENVIRONMENT }}-app-cluster
           wait-for-service-stability: true
 
+      - name: Install ECS CLI
+        run: |
+          curl -o /usr/local/bin/ecs-cli https://amazon-ecs-cli.s3.amazonaws.com/ecs-cli-linux-amd64-latest
+          chmod +x /usr/local/bin/ecs-cl
+
       - name: Run Django Migrations
         run: |
           ecs-cli compose --project-name django-app \
