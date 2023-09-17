@@ -257,11 +257,11 @@ jobs:
       - name: Run Django Migrations
         run: |
           ecs-cli compose --project-name django-app \
-            run --cluster ${{var.ENVIRONMENT}}-app-cluster --service ${{var.ENVIRONMENT}}-app-service --command \
+            run --cluster ${{vars.ENVIRONMENT}}-app-cluster --service ${{vars.ENVIRONMENT}}-app-service --command \
             "python manage.py migrate"
 
       - name: Create Superuser
         run: |
           ecs-cli compose --project-name django-app \
-            run --cluster ${{var.ENVIRONMENT}}-app-cluster --service ${{var.ENVIRONMENT}}-app-service --command \
+            run --cluster ${{vars.ENVIRONMENT}}-app-cluster --service ${{vars.ENVIRONMENT}}-app-service --command \
             "python manage.py createsuperuser --username=${{secrets.SUPERUSER_USERNAME}} --email=${{secrets.SUPERUSER_EMAIL}} --password=${{secrets.SUPERUSER_PASSWORD}} --noinput"
