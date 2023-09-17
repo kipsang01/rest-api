@@ -70,12 +70,12 @@ jobs:
         export DJANGO_SETTINGS_MODULE=commerce.settings
         python manage.py makemigrations
         python manage.py migrate
-        pytest api/tests/tests.py --cov=api  --cov-report=xml > pytest-coverage.txt
+        pytest --cache-clear api/tests/tests.py --cov=api  --cov-report=xml > pytest-coverage.txt
 
     - name: Comment coverage
       uses: coroo/pytest-coverage-commentator@v1.0.2
       with:
-         pytest-coverage: pytest-coverage.txt
+         pytest-coverage: ./pytest-coverage.txt
 #    - name: Pytest coverage comment
 #      id: coverageComment
 #      uses: MishaKav/pytest-coverage-comment@main
