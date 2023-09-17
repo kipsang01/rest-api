@@ -3,3 +3,4 @@ omit = */tests/*
        */migrations/*
        */serializers/*
        serializers.py
+       urls.py

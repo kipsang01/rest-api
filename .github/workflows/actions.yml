@@ -20,9 +20,6 @@ jobs:
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
       POSTGRES_PORT: 5432
-      AFRICASTALKING_API_KEY: ${{secrets.AFRICASTALKING_API_KEY}}
-      AFRICASTALKING_USERNAME: ${{ secrets.AFRICASTALKING_USERNAME }},
-      AFRICASTALKING_SENDER_ID: ${{ secrets.AFRICASTALKING_SENDER_ID }}
 
     services:
       database:
@@ -62,20 +59,41 @@ jobs:
         DATABASE_PASSWORD: postgres
         DATABASE_HOST: localhost
         DATABASE_PORT: 5432
+        AFRICASTALKING_API_KEY: ${{secrets.AFRICASTALKING_API_KEY}}
+        AFRICASTALKING_USERNAME: ${{ secrets.AFRICASTALKING_USERNAME }}
+        AFRICASTALKING_SENDER_ID: ${{ secrets.AFRICASTALKING_SENDER_ID }}
 
 
       run: |
-        echo "AFRICASTALKING_API_KEY=${{secrets.AFRICASTALKING_API_KEY}}" >> $GITHUB_ENV
-        echo "AFRICASTALKING_USERNAME=${{secrets.AFRICASTALKING_USERNAME}}" >> $GITHUB_ENV
-        echo "AFRICASTALKING_SENDER_ID=${{secrets.AFRICASTALKING_SENDER_ID}}" >> $GITHUB_ENV
+        echo $env
         pip install pytest pytest-django pytest-cov 
         export DJANGO_SETTINGS_MODULE=commerce.settings
         python manage.py makemigrations
         python manage.py migrate
-        pytest api/tests/tests.py --cov=api  --cov-report=html
+        pytest --junitxml=pytest.xml  --cov-report=term-missing:skip-covered --cov=api */tests/* | tee pytest-coverage.txt
 
+    - name: Pytest coverage comment
+      id: coverageComment
+      uses: MishaKav/pytest-coverage-comment@main
+      with:
+        pytest-coverage-path: ./pytest-coverage.txt
+        junitxml-path: ./pytest.xml
 
+    - name: Check the output coverage
+      run: |
+        echo "Coverage Percentage - ${{ steps.coverageComment.outputs.coverage }}"
+        echo "Coverage Color - ${{ steps.coverageComment.outputs.color }}"
+        echo "Coverage Html - ${{ steps.coverageComment.outputs.coverageHtml }}"
 
+        echo "Coverage Warnings - ${{ steps.coverageComment.outputs.warnings }}"
+
+        echo "Coverage Errors - ${{ steps.coverageComment.outputs.errors }}"
+        echo "Coverage Failures - ${{ steps.coverageComment.outputs.failures }}"
+        echo "Coverage Skipped - ${{ steps.coverageComment.outputs.skipped }}"
+        echo "Coverage Tests - ${{ steps.coverageComment.outputs.tests }}"
+        echo "Coverage Time - ${{ steps.coverageComment.outputs.time }}"
+
+        echo "Not Success Test Info - ${{ steps.coverageComment.outputs.notSuccessTestInfo }}"
 
   setup-infrastructure:
     name: Set Up Infrastructure
@@ -132,25 +150,25 @@ jobs:
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
             <details><summary>Validation Output</summary>
-        
+
             \`\`\`\n
             ${{ steps.validate.outputs.stdout }}
             \`\`\`
-            
+
             </details>
-            
+
             #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-            
+
             <details><summary>Show Plan</summary>
-            
+
             \`\`\`\n
             ${process.env.PLAN}
             \`\`\`
-            
+
             </details>
-            
+
             *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -175,63 +193,75 @@ jobs:
           TF_VAR_AFRICASTALKING_USERNAME:  ${{ secrets.AFRICASTALKING_USERNAME }}
           TF_VAR_AFRICASTALKING_SENDER:  ${{ secrets.AFRICASTALKING_SENDER_ID }}
 
-#  build-and-push:
-#    name: Deploy
-#    needs: setup-infrastructure
-#    permissions:
-#      id-token: write
-#      contents: read
-#    runs-on: ubuntu-latest
-#    if: ${{github.event_name == 'push'}}
-#    environment: development
-#    steps:
-#      - name: Checkout repository
-#        uses: actions/checkout@v3
-#
-#      - name: Configure AWS credentials
-#        uses: aws-actions/configure-aws-credentials@v2
-#        with:
-#          role-to-assume: ${{ secrets.AWS_ROLE }}
-#          role-session-name: RoleSession
-#          aws-region: ${{ vars.AWS_REGION }}
-#
-#      - name: Login to Amazon ECR
-#        id: login-ecr
-#        uses: aws-actions/amazon-ecr-login@v1
-#
-#      - name: Creating New Tag of Releases
-#        id: increment-git-tag
-#        working-directory: ./scripts
-#        run: |
-#          bash get-tag.sh -v major
-#
-#      - name: Build, tag, and push image to Amazon ECR
-#        id: build-image
-#        env:
-#          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-#          ECR_REPOSITORY: django-app-backend
-#          IMAGE_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
-#        run: |
-#          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-#          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-#          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-#
-#      - name: Download task definition
-#        run: |
-#          aws ecs describe-task-definition --task-definition rest-api --query taskDefinition > task_definition.json
-#
-#      - name: Fill in the new image ID in the Amazon ECS task definition
-#        id: task-def
-#        uses: aws-actions/amazon-ecs-render-task-definition@v1
-#        with:
-#          task-definition: task_definition.json
-#          container-name: restapi
-#          image: ${{ steps.build-image.outputs.image }}
-#
-#      - name: Deploy Amazon ECS task definition
-#        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-#        with:
-#          task-definition: ${{ steps.task-def.outputs.task-definition }}
-#          service: ${{ vars.ENVIRONMENT }}-app-service
-#          cluster: ${{ vars.ENVIRONMENT }}-app-cluster
-#          wait-for-service-stability: true
+  build-and-push:
+    name: Deploy
+    needs: setup-infrastructure
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    if: ${{github.event_name == 'push'}}
+    environment: development
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-session-name: RoleSession
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Creating New Tag of Releases
+        id: increment-git-tag
+        working-directory: ./scripts
+        run: |
+          bash get-tag.sh -v major
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: django-app-backend
+          IMAGE_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Download task definition
+        run: |
+          aws ecs describe-task-definition --task-definition rest-api --query taskDefinition > task_definition.json
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task_definition.json
+          container-name: restapi
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ vars.ENVIRONMENT }}-app-service
+          cluster: ${{ vars.ENVIRONMENT }}-app-cluster
+          wait-for-service-stability: true
+
+      - name: Run Django Migrations
+        run: |
+          ecs-cli compose --project-name django-app \
+            run --cluster ${{vars.ENVIRONMENT}}-app-cluster --service ${{vars.ENVIRONMENT}}-app-service --command \
+            "python manage.py migrate"
+
+      - name: Create Superuser
+        run: |
+          ecs-cli compose --project-name django-app \
+            run --cluster ${{vars.ENVIRONMENT}}-app-cluster --service ${{vars.ENVIRONMENT}}-app-service --command \
+            "python manage.py createsuperuser --username=${{secrets.SUPERUSER_USERNAME}} --email=${{secrets.SUPERUSER_EMAIL}} --password=${{secrets.SUPERUSER_PASSWORD}} --noinput"

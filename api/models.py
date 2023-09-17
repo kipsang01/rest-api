@@ -1,4 +1,5 @@
 import os
+import logging
 from dotenv import load_dotenv
 
 from django.contrib.auth.models import AbstractUser
@@ -6,6 +7,7 @@ from django.db import models
 import africastalking
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 
 class Customer(models.Model):
@@ -37,9 +39,6 @@ class Order(models.Model):
         response = self.send_message(message, recipients)
         if response['Recipients'][0]['statusCode'] == 101:
             self.message_sent = True
-            return 'success'
-        else:
-            return None
 
     @staticmethod
     def send_message(message, recipients):
@@ -54,4 +53,5 @@ class Order(models.Model):
             response = sms.send(message, recipients, sender)
             return response['SMSMessageData']
         except Exception as e:
+            logger.critical(e)
             return None
