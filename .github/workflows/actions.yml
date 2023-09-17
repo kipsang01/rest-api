@@ -70,18 +70,20 @@ jobs:
         export DJANGO_SETTINGS_MODULE=commerce.settings
         python manage.py makemigrations
         python manage.py migrate
-        pytest --cache-clear api/tests/tests.py --cov=api  --cov-report=xml > pytest-coverage.txt
+        pytest --junitxml=pytest.xml  --cov-report=term-missing:skip-covered --cov=api tests/ | tee pytest-coverage.txt
 
-    - name: Comment coverage
-      uses: coroo/pytest-coverage-commentator@v1.0.2
-      with:
-         pytest-coverage: ./pytest-coverage.txt
-#    - name: Pytest coverage comment
-#      id: coverageComment
-#      uses: MishaKav/pytest-coverage-comment@main
+#    - name: Comment coverage
+#      uses: coroo/pytest-coverage-commentator@v1.0.2
 #      with:
-#        pytest-coverage-path: ./pytest-coverage.txt
-#        junitxml-path: ./coverage.xml
+#         pytest-coverage: ./pytest-coverage.txt
+
+    - name: Pytest coverage comment
+      id: coverageComment
+      uses: MishaKav/pytest-coverage-comment@main
+      with:
+        pytest-coverage-path: ./pytest-coverage.txt
+        junitxml-path: ./pytest.xml
+
 #    - name: Check the output coverage
 #      run: |
 #        echo "Coverage Percantage - ${{ steps.coverageComment.outputs.coverage }}"
@@ -97,7 +99,7 @@ jobs:
 #        echo "Coverage Time - ${{ steps.coverageComment.outputs.time }}"
 #
 #        echo "Not Success Test Info - ${{ steps.coverageComment.outputs.notSuccessTestInfo }}"
-#
+
 #    - name: Create the Badge
 #      uses: schneegans/dynamic-badges-action@v1.6.0
 #      with:
