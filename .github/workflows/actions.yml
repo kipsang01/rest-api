@@ -70,7 +70,7 @@ jobs:
         export DJANGO_SETTINGS_MODULE=commerce.settings
         python manage.py makemigrations
         python manage.py migrate
-        pytest --junitxml=pytest.xml  --cov-report=term-missing:skip-covered --cov=api tests/ | tee pytest-coverage.txt
+        pytest --junitxml=pytest.xml  --cov-report=term-missing:skip-covered --cov=api | tee pytest-coverage.txt
 
 #    - name: Comment coverage
 #      uses: coroo/pytest-coverage-commentator@v1.0.2
@@ -84,21 +84,21 @@ jobs:
         pytest-coverage-path: ./pytest-coverage.txt
         junitxml-path: ./pytest.xml
 
-#    - name: Check the output coverage
-#      run: |
-#        echo "Coverage Percantage - ${{ steps.coverageComment.outputs.coverage }}"
-#        echo "Coverage Color - ${{ steps.coverageComment.outputs.color }}"
-#        echo "Coverage Html - ${{ steps.coverageComment.outputs.coverageHtml }}"
-#
-#        echo "Coverage Warnings - ${{ steps.coverageComment.outputs.warnings }}"
-#
-#        echo "Coverage Errors - ${{ steps.coverageComment.outputs.errors }}"
-#        echo "Coverage Failures - ${{ steps.coverageComment.outputs.failures }}"
-#        echo "Coverage Skipped - ${{ steps.coverageComment.outputs.skipped }}"
-#        echo "Coverage Tests - ${{ steps.coverageComment.outputs.tests }}"
-#        echo "Coverage Time - ${{ steps.coverageComment.outputs.time }}"
-#
-#        echo "Not Success Test Info - ${{ steps.coverageComment.outputs.notSuccessTestInfo }}"
+    - name: Check the output coverage
+      run: |
+        echo "Coverage Percentage - ${{ steps.coverageComment.outputs.coverage }}"
+        echo "Coverage Color - ${{ steps.coverageComment.outputs.color }}"
+        echo "Coverage Html - ${{ steps.coverageComment.outputs.coverageHtml }}"
+
+        echo "Coverage Warnings - ${{ steps.coverageComment.outputs.warnings }}"
+
+        echo "Coverage Errors - ${{ steps.coverageComment.outputs.errors }}"
+        echo "Coverage Failures - ${{ steps.coverageComment.outputs.failures }}"
+        echo "Coverage Skipped - ${{ steps.coverageComment.outputs.skipped }}"
+        echo "Coverage Tests - ${{ steps.coverageComment.outputs.tests }}"
+        echo "Coverage Time - ${{ steps.coverageComment.outputs.time }}"
+
+        echo "Not Success Test Info - ${{ steps.coverageComment.outputs.notSuccessTestInfo }}"
 
 #    - name: Create the Badge
 #      uses: schneegans/dynamic-badges-action@v1.6.0
