@@ -6,12 +6,11 @@ from dotenv import load_dotenv
 load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-ojia#eqddp#e4xwh8ynt2g6)5og*+9gttneya@-0dd9^ak6=gb'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'DeFault.Secret00013KeyDJaooaRrfjhhw83.')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG_MODE', True)
 
-ALLOWED_HOSTS = ['*']
-
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", ['*']).split(" ")
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -78,12 +77,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'commerce.wsgi.application'
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': 'mydatabase',
-#     }
-# }
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
