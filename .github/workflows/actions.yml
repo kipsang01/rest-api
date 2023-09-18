@@ -6,9 +6,9 @@ on:
   pull_request:
     branches: [ "main" ]
 permissions:
-      id-token: write # This is required for aws oidc connection
-      contents: read # This is required for actions/checkout
-      pull-requests: write # This is required for gh bot to comment PR
+      id-token: write
+      contents: read
+      pull-requests: write
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
 jobs:
@@ -95,110 +95,108 @@ jobs:
 
         echo "Not Success Test Info - ${{ steps.coverageComment.outputs.notSuccessTestInfo }}"
 
-  setup-infrastructure:
-    name: Set Up Infrastructure
-    runs-on: ubuntu-latest
-    if: ${{github.event_name == 'push'}}
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./infrastructure
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
 
-      - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE }}
-          aws-region: ${{ vars.AWS_REGION }}
-          role-session-name: GitHub-OIDC-TERRAFORM
-
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.3.0
-
-      - name: Terraform fmt
-        id: fmt
-        run: terraform fmt -check
-        continue-on-error: true
-
-      - name: Terraform Init
-        id: init
-        run: terraform init
-
-      - name: Terraform Validate
-        id: validate
-        uses: hashicorp/terraform-github-actions/validate@v0.3.7
-
-      - name: Terraform Plan
-        id: plan
-        run: terraform plan -no-color
-        if: github.event_name == 'pull_request'
-        continue-on-error: true
-
-      - uses: actions/github-script@v6
-        if: github.event_name == 'pull_request'
-        env:
-          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-            <details><summary>Validation Output</summary>
-
-            \`\`\`\n
-            ${{ steps.validate.outputs.stdout }}
-            \`\`\`
-
-            </details>
-
-            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-
-            <details><summary>Show Plan</summary>
-
-            \`\`\`\n
-            ${process.env.PLAN}
-            \`\`\`
-
-            </details>
-
-            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
-
-      - name: Terraform Plan Status
-        if: steps.plan.outcome == 'failure'
-        run: exit 1
-
-#uncomment to create resources
-#      - name: Terraform Apply
-#        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-#        run: terraform apply -auto-approve -input=false
+  # uncomment to create setup infrastructure
+#  setup-infrastructure:
+#    name: Set Up Infrastructure
+#    runs-on: ubuntu-latest
+#    if: ${{github.event_name == 'push'}}
+#    defaults:
+#      run:
+#        shell: bash
+#        working-directory: ./infrastructure
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v2
+#
+#      - name: configure aws credentials
+#        uses: aws-actions/configure-aws-credentials@v1
+#        with:
+#          role-to-assume: ${{ secrets.AWS_ROLE }}
+#          aws-region: ${{ vars.AWS_REGION }}
+#          role-session-name: GitHub-OIDC-TERRAFORM
+#
+#
+#      - name: Setup Terraform
+#        uses: hashicorp/setup-terraform@v2
+#        with:
+#          terraform_version: 1.3.0
+#
+#      - name: Terraform fmt
+#        id: fmt
+#        run: terraform fmt -check
+#        continue-on-error: true
+#
+#      - name: Terraform Init
+#        id: init
+#        run: terraform init
+#
+#      - name: Terraform Validate
+#        id: validate
+#        uses: hashicorp/terraform-github-actions/validate@v0.3.7
+#
+#      - name: Terraform Plan
+#        id: plan
+#        run: terraform plan -no-color
+#        if: github.event_name == 'pull_request'
+#        continue-on-error: true
+#
+#      - uses: actions/github-script@v6
+#        if: github.event_name == 'pull_request'
 #        env:
-#          TF_VAR_DJANGO_SECRET_KEY:  ${{ secrets.DJANGO_SECRET_KEY }}
-#          TF_VAR_DEBUG:  ${{ vars.DEBUG_MODE }}
-#          TF_VAR_DATABASE_NAME: ${{secrets.POSTGRES_DB}}
-#          TF_VAR_DATABASE_USER: ${{secrets.POSTGRES_USER}}
-#          TF_VAR_DATABASE_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
-#          TF_VAR_AFRICASTALKING_API_KEY:  ${{ secrets.AFRICASTALKING_API_KEY }}
-#          TF_VAR_AFRICASTALKING_USERNAME:  ${{ secrets.AFRICASTALKING_USERNAME }}
-#          TF_VAR_AFRICASTALKING_SENDER:  ${{ secrets.AFRICASTALKING_SENDER_ID }}
+#          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+#        with:
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#          script: |
+#            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+#            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+#            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+#            <details><summary>Validation Output</summary>
+#
+#            \`\`\`\n
+#            ${{ steps.validate.outputs.stdout }}
+#            \`\`\`
+#
+#            </details>
+#
+#            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+#
+#            <details><summary>Show Plan</summary>
+#
+#            \`\`\`\n
+#            ${process.env.PLAN}
+#            \`\`\`
+#
+#            </details>
+#
+#            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+#
+#            github.rest.issues.createComment({
+#              issue_number: context.issue.number,
+#              owner: context.repo.owner,
+#              repo: context.repo.repo,
+#              body: output
+#            })
+#
+#      - name: Terraform Plan Status
+#        if: steps.plan.outcome == 'failure'
+#        run: exit 1
+#
+##      - name: Terraform Apply
+##        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+##        run: terraform apply -auto-approve -input=false
+##        env:
+##          TF_VAR_DJANGO_SECRET_KEY:  ${{ secrets.DJANGO_SECRET_KEY }}
+##          TF_VAR_DEBUG:  ${{ vars.DEBUG_MODE }}
+##          TF_VAR_DATABASE_NAME: ${{secrets.POSTGRES_DB}}
+##          TF_VAR_DATABASE_USER: ${{secrets.POSTGRES_USER}}
+##          TF_VAR_DATABASE_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
+##          TF_VAR_AFRICASTALKING_API_KEY:  ${{ secrets.AFRICASTALKING_API_KEY }}
+##          TF_VAR_AFRICASTALKING_USERNAME:  ${{ secrets.AFRICASTALKING_USERNAME }}
+##          TF_VAR_AFRICASTALKING_SENDER:  ${{ secrets.AFRICASTALKING_SENDER_ID }}
 
-#comment to create resources
-      - name: Terraform Destroy
-        run: terraform destroy
 
-#comment to push container
+# uncomment to push container
 #  build-and-push:
 #    name: Deploy
 #    needs: setup-infrastructure
